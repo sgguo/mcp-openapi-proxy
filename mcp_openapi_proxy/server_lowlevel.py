@@ -32,6 +32,7 @@ from urllib.parse import unquote
 from mcp.server.lowlevel import Server
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
+
 from mcp_openapi_proxy.utils import (
     setup_logging,
     normalize_tool_name,

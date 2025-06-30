@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mcp-openapi-proxy"
+name = "ecloud-mcp"
 requires-python = ">=3.10"
 version = "0.1.0"
 description = "MCP server for exposing OpenAPI specifications as MCP tools."
@@ -20,10 +20,11 @@ dependencies = [
   "prance>=23.6.21.0",
   "openapi-spec-validator>=0.7.1",
   "jmespath>=1.0.1",
+  "fastmcp>=2.9.2"
 ]
 
 [project.scripts]
-mcp-openapi-proxy = "mcp_openapi_proxy:main"  # Correct entry pointing to __init__.py:main
+ecloud-mcp = "mcp_openapi_proxy:main"  # Correct entry pointing to __init__.py:main
 
 [project.optional-dependencies]
 dev = [
