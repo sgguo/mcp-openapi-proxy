@@ -84,6 +84,7 @@ def run_simple_server():
             RouteMap(tags={"Commvault Transform Policy"}, mcp_type=MCPType.EXCLUDE),
             RouteMap(tags={"Client Resource"}, mcp_type=MCPType.EXCLUDE),
             RouteMap(tags={"Client Package"}, mcp_type=MCPType.EXCLUDE),
+            RouteMap(pattern=r"^/nbu.*", mcp_type=MCPType.EXCLUDE),
             # GET requests with path parameters become ResourceTemplates
             RouteMap(methods=["GET"], pattern=r".*\{.*\}.*", mcp_type=MCPType.RESOURCE),
             # All other GET requests become Resources
