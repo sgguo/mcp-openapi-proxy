@@ -10,6 +10,7 @@ Configuration is controlled via environment variables:
 - API_KEY: Generic token for Bearer header.
 """
 
+import json
 import os
 import httpx
 from fastmcp import FastMCP
@@ -35,7 +36,18 @@ def run_simple_server():
 
     logger.debug("Preloading functions from OpenAPI JSON spec...")
     global spec
-    spec = httpx.get(spec_url).json()
+    if spec_url.startswith("file://"):
+        with open(file=spec_url[7:], mode="r", encoding="utf-8") as f:
+            content = f.read()
+        spec_format = os.getenv("OPENAPI_SPEC_FORMAT", "json").lower()
+        logger.debug(f"Using {spec_format.upper()} parser based on OPENAPI_SPEC_FORMAT env var")
+        try:
+            spec = json.loads(content)
+            logger.debug(f"Parsed as JSON from {spec_url}")
+        except json.JSONDecodeError as je:
+            logger.error(f"JSON parsing failed: {je}. Raw content: {content[:500]}...")
+    elif spec_url.startswith("http://") or spec_url.startswith("https://"):
+        spec = httpx.get(spec_url).json()
     if spec is None:
         logger.error("Failed to fetch OpenAPI spec, no functions to preload.")
         sys.exit(1)
@@ -85,10 +97,11 @@ def run_simple_server():
             RouteMap(tags={"Client Resource"}, mcp_type=MCPType.EXCLUDE),
             RouteMap(tags={"Client Package"}, mcp_type=MCPType.EXCLUDE),
             RouteMap(pattern=r"^/nbu.*", mcp_type=MCPType.EXCLUDE),
+            RouteMap(pattern=r"^/auth.*", mcp_type=MCPType.EXCLUDE),
             # GET requests with path parameters become ResourceTemplates
-            RouteMap(methods=["GET"], pattern=r".*\{.*\}.*", mcp_type=MCPType.RESOURCE),
-            # All other GET requests become Resources
-            RouteMap(methods=["GET"], pattern=r".*", mcp_type=MCPType.RESOURCE),
+            # RouteMap(methods=["GET"], pattern=r".*\{.*\}.*", mcp_type=MCPType.RESOURCE),
+            # # # All other GET requests become Resources
+            # RouteMap(methods=["GET"], pattern=r".*", mcp_type=MCPType.RESOURCE),
         ]
 
         mcp = FastMCP.from_openapi(
@@ -97,7 +110,7 @@ def run_simple_server():
             route_maps=semantic_maps,
             name="eCloudTech MCP Gateway"
         )
-        mcp.run(transport="sse", host="0.0.0.0", port=int(openapi_port))
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=int(openapi_port))
         # mcp.run(transport="stdio")
     except Exception as e:
         logger.error(f"Unhandled exception in MCP server (FastMCP): {e}", exc_info=True)
